@@ -1,0 +1,13 @@
+# Default: text files normalized to LF in repo
+* text=auto eol=lf
+
+# Windows batch scripts
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Shell scripts
+*.sh text eol=lf
+
+# Maven wrapper scripts
+mvnw text eol=lf
+mvnw.cmd text eol=crlf

@@ -1,0 +1,27 @@
+# Java / Maven
+target/
+*.class
+*.log
+
+# Maven wrapper jar (keep wrapper scripts + properties)
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Misc
+out/
