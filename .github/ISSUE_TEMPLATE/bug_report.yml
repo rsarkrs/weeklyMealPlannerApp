@@ -1,0 +1,62 @@
+name: Bug report
+description: Report a reproducible defect with expected vs actual behavior
+title: "fix: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please include enough detail to reproduce and verify the fix.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      placeholder: "Products endpoint returns 500 when locationId is missing"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Call GET /api/v1/kroger/products?term=milk
+        2. Observe response
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: "Return 400 with validation message for missing locationId"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: "Returns 500 with stack trace"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Paste relevant logs or screenshots
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Fix acceptance criteria
+      placeholder: |
+        - [ ] Repro steps no longer fail
+        - [ ] Regression test added
+        - [ ] CI passes
+    validations:
+      required: true
