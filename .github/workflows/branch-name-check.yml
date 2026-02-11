@@ -1,0 +1,19 @@
+name: Branch Name Check
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-branch-name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR branch name
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          echo "Branch: $BRANCH"
+          if [[ ! "$BRANCH" =~ ^(feat|fix|test|chore|docs)\/[a-z0-9._-]+$ ]]; then
+            echo "Invalid branch name: $BRANCH"
+            echo "Use: feat/*, fix/*, test/*, chore/*, docs/*"
+            exit 1
+          fi
