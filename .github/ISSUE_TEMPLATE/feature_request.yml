@@ -1,0 +1,98 @@
+name: Feature request
+description: Propose a new feature with clear scope and acceptance criteria
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing a feature. Keep it scoped and testable.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: One-sentence description of the feature
+      placeholder: "Add /api/v1/kroger/locations endpoint"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / opportunity
+      description: What user or system problem does this solve?
+      placeholder: "We need a locations endpoint so product searches can be filtered by locationId."
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope (in)
+      description: What is included in this issue?
+      placeholder: |
+        - Add controller route
+        - Add service method
+        - Add DTO mapping
+        - Add tests
+    validations:
+      required: true
+
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: What is explicitly not included?
+      placeholder: |
+        - Frontend UI changes
+        - Caching strategy overhaul
+        - Pagination beyond limit param
+    validations:
+      required: false
+
+  - type: textarea
+    id: api_contract
+    attributes:
+      label: API contract / technical notes
+      description: Endpoint shape, params, response notes, dependencies, auth requirements
+      placeholder: |
+        Endpoint: GET /api/v1/kroger/locations
+        Params: zipCode (required), radiusInMiles (optional), limit (optional)
+        Auth: Kroger OAuth client credentials token
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Checklist that defines done
+      placeholder: |
+        - [ ] Valid request returns 200 with mapped DTO payload
+        - [ ] Invalid params return 400 with clear message
+        - [ ] Upstream API errors return structured 5xx/4xx responses
+        - [ ] Unit/integration tests pass in CI
+    validations:
+      required: true
+
+  - type: textarea
+    id: test_plan
+    attributes:
+      label: Test plan
+      description: How will this be verified locally and in CI?
+      placeholder: |
+        - Unit tests for service and mapper
+        - Controller test for request validation
+        - Manual curl verification for happy/edge paths
+    validations:
+      required: true
+
+  - type: input
+    id: related
+    attributes:
+      label: Related issues/PRs
+      description: Reference with #issue_number
+      placeholder: "#12, #15"
+    validations:
+      required: false
