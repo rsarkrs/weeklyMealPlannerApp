@@ -16,6 +16,7 @@ kroger:
   base-url: ${KROGER_BASE_URL:https://api.kroger.com}
   oauth-token-path: /v1/connect/oauth2/token
   locations-path: /v1/locations
+  products-path: /v1/products
   client-id: ${KROGER_CLIENT_ID}
   client-secret: ${KROGER_CLIENT_SECRET}
   scope: product.compact

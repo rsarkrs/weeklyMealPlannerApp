@@ -19,6 +19,9 @@ public class KrogerProperties {
     private String locationsPath;
 
     @NotBlank
+    private String productsPath;
+
+    @NotBlank
     private String clientId;
 
     @NotBlank
@@ -49,6 +52,14 @@ public class KrogerProperties {
 
     public void setLocationsPath(String locationsPath) {
         this.locationsPath = locationsPath;
+    }
+
+    public String getProductsPath() {
+        return productsPath;
+    }
+
+    public void setProductsPath(String productsPath) {
+        this.productsPath = productsPath;
     }
 
     public String getClientId() {

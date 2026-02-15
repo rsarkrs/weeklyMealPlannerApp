@@ -96,6 +96,11 @@ h1 {
   align-items: end;
 }
 
+.locations-controls,
+.products-controls {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 label {
   display: grid;
   gap: 6px;
@@ -175,10 +180,88 @@ h2 {
   background: rgba(27, 143, 90, 0.09);
 }
 
+.count-pill.subtle {
+  border-color: rgba(31, 42, 31, 0.16);
+  color: var(--muted);
+  background: rgba(31, 42, 31, 0.04);
+}
+
+.selection-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 12px;
+}
+
+.selection-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.secondary-btn {
+  background: rgba(255, 255, 255, 0.88);
+  color: #184633;
+  border: 1px solid rgba(24, 70, 51, 0.2);
+  box-shadow: none;
+}
+
+.secondary-btn:hover {
+  filter: none;
+  background: white;
+}
+
+.selectable-card {
+  position: relative;
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.location-checkbox {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  accent-color: #1b8f5a;
+}
+
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: 12px;
+}
+
+.groups {
+  display: grid;
+  gap: 12px;
+}
+
+.group {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 12px;
+}
+
+.group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.error-inline {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.92rem;
+}
+
+.product-cards {
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
 }
 
 .card {
@@ -260,6 +343,24 @@ pre {
 
   .controls {
     grid-template-columns: 1fr;
+  }
+
+  .selection-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .selection-actions {
+    width: 100%;
+  }
+
+  .secondary-btn {
+    flex: 1;
+  }
+
+  .group-head {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   button {
