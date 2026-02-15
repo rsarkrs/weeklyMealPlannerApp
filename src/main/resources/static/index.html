@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kroger Location Finder</title>
+  <title>Kroger Location + Product Finder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,12 +16,13 @@
   <main class="app-shell">
     <header class="hero">
       <p class="eyebrow">Weekly Meal Planner</p>
-      <h1>Kroger Store Location Explorer</h1>
-      <p class="subhead">Enter search parameters, call your Spring API, and inspect the JSON output visually.</p>
+      <h1>Kroger Location + Product Explorer</h1>
+      <p class="subhead">Step 1: fetch/select locations. Step 2: search a product term across selected locations.</p>
     </header>
 
     <section class="panel panel-form">
-      <form id="locationsForm" class="controls" novalidate>
+      <h2>1. Find Locations</h2>
+      <form id="locationsForm" class="controls locations-controls" novalidate>
         <label>
           ZIP Code
           <input id="zip" name="zip" type="text" maxlength="10" placeholder="85338" required />
@@ -37,24 +38,70 @@
           <input id="limit" name="limit" type="number" min="1" max="50" value="5" required />
         </label>
 
-        <button id="submitBtn" type="submit">Fetch Locations</button>
+        <button id="fetchLocationsBtn" type="submit">Fetch Locations</button>
       </form>
 
-      <p id="status" class="status" aria-live="polite"></p>
+      <p id="locationStatus" class="status" aria-live="polite"></p>
     </section>
 
     <section class="panel panel-results">
       <div class="results-head">
-        <h2>Results</h2>
-        <span id="resultCount" class="count-pill">0 locations</span>
+        <h2>Location Results</h2>
+        <span id="locationResultCount" class="count-pill">0 locations</span>
       </div>
 
-      <div id="cards" class="cards"></div>
+      <div class="selection-bar">
+        <span id="selectionCount" class="count-pill subtle">0 selected</span>
+        <div class="selection-actions">
+          <button id="selectAllBtn" class="secondary-btn" type="button">Select All</button>
+          <button id="clearSelectionBtn" class="secondary-btn" type="button">Clear Selection</button>
+        </div>
+      </div>
+
+      <div id="locationCards" class="cards"></div>
+    </section>
+
+    <section class="panel panel-form">
+      <h2>2. Search Products Across Selected Locations</h2>
+      <form id="productsForm" class="controls products-controls" novalidate>
+        <label>
+          Search Term
+          <input id="term" name="term" type="text" maxlength="100" placeholder="milk" required />
+        </label>
+
+        <label>
+          Brand (optional)
+          <input id="brand" name="brand" type="text" maxlength="100" placeholder="Kroger" />
+        </label>
+
+        <label>
+          Product Limit Per Location
+          <input id="productLimit" name="productLimit" type="number" min="1" max="50" value="5" required />
+        </label>
+
+        <button id="searchProductsBtn" type="submit">Search Products</button>
+      </form>
+
+      <p id="productStatus" class="status" aria-live="polite"></p>
+    </section>
+
+    <section class="panel panel-results">
+      <div class="results-head">
+        <h2>Product Results</h2>
+        <span id="productResultCount" class="count-pill">0 products</span>
+      </div>
+
+      <div id="productGroups" class="groups"></div>
     </section>
 
     <section class="panel panel-json">
-      <h2>Raw JSON</h2>
-      <pre id="rawJson">[]</pre>
+      <h2>Raw JSON: Locations</h2>
+      <pre id="locationsRawJson">[]</pre>
+    </section>
+
+    <section class="panel panel-json">
+      <h2>Raw JSON: Products</h2>
+      <pre id="productsRawJson">[]</pre>
     </section>
   </main>
 
