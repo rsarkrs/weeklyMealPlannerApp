@@ -1,0 +1,63 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kroger Location Finder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="bg-glow bg-glow-a"></div>
+  <div class="bg-glow bg-glow-b"></div>
+
+  <main class="app-shell">
+    <header class="hero">
+      <p class="eyebrow">Weekly Meal Planner</p>
+      <h1>Kroger Store Location Explorer</h1>
+      <p class="subhead">Enter search parameters, call your Spring API, and inspect the JSON output visually.</p>
+    </header>
+
+    <section class="panel panel-form">
+      <form id="locationsForm" class="controls" novalidate>
+        <label>
+          ZIP Code
+          <input id="zip" name="zip" type="text" maxlength="10" placeholder="85338" required />
+        </label>
+
+        <label>
+          Radius (miles)
+          <input id="radius" name="radius" type="number" min="1" max="100" value="10" required />
+        </label>
+
+        <label>
+          Limit
+          <input id="limit" name="limit" type="number" min="1" max="50" value="5" required />
+        </label>
+
+        <button id="submitBtn" type="submit">Fetch Locations</button>
+      </form>
+
+      <p id="status" class="status" aria-live="polite"></p>
+    </section>
+
+    <section class="panel panel-results">
+      <div class="results-head">
+        <h2>Results</h2>
+        <span id="resultCount" class="count-pill">0 locations</span>
+      </div>
+
+      <div id="cards" class="cards"></div>
+    </section>
+
+    <section class="panel panel-json">
+      <h2>Raw JSON</h2>
+      <pre id="rawJson">[]</pre>
+    </section>
+  </main>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>
