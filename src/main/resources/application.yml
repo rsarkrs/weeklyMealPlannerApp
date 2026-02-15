@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: weeklymealplanner
+
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+kroger:
+  base-url: ${KROGER_BASE_URL:https://api.kroger.com}
+  oauth-token-path: /v1/connect/oauth2/token
+  locations-path: /v1/locations
+  client-id: ${KROGER_CLIENT_ID}
+  client-secret: ${KROGER_CLIENT_SECRET}
+  scope: product.compact

@@ -64,6 +64,42 @@ Health endpoint:
 
 - `http://localhost:8080/actuator/health`
 
+## Testing
+
+### Test matrix
+
+- `KrogerControllerTest`: controller validation and HTTP status/body behavior
+- `FindKrogerLocationsServiceTest`: mapping logic, hours formatting, null safety, pickup/delivery flags
+- `KrogerAuthHttpClientTest`: token request contract, auth headers, caching, token error handling
+- `KrogerLocationsHttpClientTest`: query params, bearer token header, response parsing, non-2xx handling
+- `KrogerLocationsApiIntegrationTest`: end-to-end `/api/v1/kroger/locations` flow with mocked upstream token/locations APIs
+
+### Run tests
+
+Windows (all tests):
+
+```powershell
+.\mvnw.cmd test
+```
+
+Windows (integration test only):
+
+```powershell
+.\mvnw.cmd -Dtest=KrogerLocationsApiIntegrationTest test
+```
+
+Windows (Kroger unit tests only):
+
+```powershell
+.\mvnw.cmd -Dtest=KrogerControllerTest,FindKrogerLocationsServiceTest,KrogerAuthHttpClientTest,KrogerLocationsHttpClientTest test
+```
+
+macOS / Linux (all tests):
+
+```bash
+./mvnw test
+```
+
 ## Planned Endpoints
 
 - `GET /api/v1/kroger/locations`

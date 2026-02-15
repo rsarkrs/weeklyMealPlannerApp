@@ -1,0 +1,268 @@
+﻿:root {
+  --bg: #f4efe4;
+  --ink: #1f2a1f;
+  --muted: #5f6f5b;
+  --panel: rgba(255, 255, 255, 0.76);
+  --line: rgba(31, 42, 31, 0.12);
+  --accent: #1b8f5a;
+  --accent-2: #e5a62c;
+  --danger: #b42318;
+  --shadow: 0 14px 36px rgba(25, 36, 24, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Space Grotesk", system-ui, -apple-system, Segoe UI, sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 12% 14%, rgba(27, 143, 90, 0.16), transparent 44%),
+    radial-gradient(circle at 88% 26%, rgba(229, 166, 44, 0.18), transparent 48%),
+    linear-gradient(145deg, #f5f2e8 0%, #f0efe6 50%, #ebf2ed 100%);
+}
+
+.bg-glow {
+  position: fixed;
+  border-radius: 999px;
+  filter: blur(56px);
+  z-index: -1;
+}
+
+.bg-glow-a {
+  width: 240px;
+  height: 240px;
+  left: -80px;
+  top: -40px;
+  background: rgba(27, 143, 90, 0.2);
+}
+
+.bg-glow-b {
+  width: 280px;
+  height: 280px;
+  right: -100px;
+  bottom: -60px;
+  background: rgba(229, 166, 44, 0.2);
+}
+
+.app-shell {
+  width: min(1060px, 92vw);
+  margin: 28px auto 52px;
+  display: grid;
+  gap: 16px;
+}
+
+.hero {
+  padding: 18px 2px 8px;
+  animation: rise 280ms ease-out;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+h1 {
+  margin: 8px 0;
+  font-size: clamp(1.4rem, 4vw, 2.2rem);
+  line-height: 1.08;
+}
+
+.subhead {
+  margin: 0;
+  color: var(--muted);
+}
+
+.panel {
+  backdrop-filter: blur(4px);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 18px;
+  animation: rise 320ms ease-out;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.92);
+  font: inherit;
+}
+
+input:focus {
+  outline: 2px solid rgba(27, 143, 90, 0.35);
+  border-color: rgba(27, 143, 90, 0.55);
+}
+
+button {
+  border: none;
+  border-radius: 12px;
+  padding: 11px 14px;
+  font: inherit;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), #157349);
+  color: white;
+  cursor: pointer;
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.status {
+  min-height: 1.2em;
+  margin: 12px 2px 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.status.error {
+  color: var(--danger);
+}
+
+.results-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.count-pill {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(27, 143, 90, 0.35);
+  color: #17563a;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.84rem;
+  background: rgba(27, 143, 90, 0.09);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.card h3 {
+  margin: 0;
+  font-size: 1.02rem;
+}
+
+.meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.badge {
+  font-size: 0.76rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
+.badge.pickup {
+  color: #1a4168;
+  background: rgba(37, 99, 235, 0.14);
+}
+
+.badge.delivery {
+  color: #6b3b00;
+  background: rgba(229, 166, 44, 0.2);
+}
+
+.empty {
+  color: var(--muted);
+  font-style: italic;
+}
+
+pre {
+  margin: 8px 0 0;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fafaf8;
+  max-height: 320px;
+  overflow: auto;
+  font-family: Consolas, Menlo, Monaco, monospace;
+  font-size: 0.85rem;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    width: min(650px, 94vw);
+    margin-top: 18px;
+  }
+
+  .controls {
+    grid-template-columns: 1fr;
+  }
+
+  button {
+    width: 100%;
+  }
+}
