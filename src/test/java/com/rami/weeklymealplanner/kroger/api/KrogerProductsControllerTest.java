@@ -70,6 +70,12 @@ class KrogerProductsControllerTest {
                         "1 gal",
                         3.99,
                         2.99,
+                        3.99,
+                        2.99,
+                        4.29,
+                        3.79,
+                        4.29,
+                        3.79,
                         "UNIT",
                         "REFRIGERATED"
                 )

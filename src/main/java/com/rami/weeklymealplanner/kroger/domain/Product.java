@@ -10,5 +10,7 @@ public record Product(
         String upc,
         String description,
         String brand,
+        ItemInformation itemInformation,
+        Temperature temperature,
         List<ProductItem> items
 ) {}
