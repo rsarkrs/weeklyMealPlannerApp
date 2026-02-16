@@ -26,9 +26,22 @@ const productsRawJsonEl = document.getElementById("productsRawJson");
 
 const selectAllBtn = document.getElementById("selectAllBtn");
 const clearSelectionBtn = document.getElementById("clearSelectionBtn");
+const cartItemCountEl = document.getElementById("cartItemCount");
+const appCartListEl = document.getElementById("appCartList");
+const storeTotalsEl = document.getElementById("storeTotals");
+const cheapestStoreStatusEl = document.getElementById("cheapestStoreStatus");
+const clearCartBtn = document.getElementById("clearCartBtn");
+const cartModalityEl = document.getElementById("cartModality");
+
+const connectKrogerBtn = document.getElementById("connectKrogerBtn");
+const syncCheapestCartBtn = document.getElementById("syncCheapestCartBtn");
+const authStatusEl = document.getElementById("authStatus");
+const cartSyncStatusEl = document.getElementById("cartSyncStatus");
+const cartSyncRawJsonEl = document.getElementById("cartSyncRawJson");
 
 let fetchedLocations = [];
 let selectedLocationIds = new Set();
+let appCartItems = [];
 
 function setStatus(element, message, isError = false) {
   element.textContent = message;
@@ -39,6 +52,13 @@ function formatCount(value, singular, plural) {
   return `${value} ${value === 1 ? singular : plural}`;
 }
 
+function formatMoney(value) {
+  if (value == null || Number.isNaN(Number(value))) {
+    return "N/A";
+  }
+  return `$${Number(value).toFixed(2)}`;
+}
+
 function selectedLocationCount() {
   return selectedLocationIds.size;
 }
@@ -46,6 +66,16 @@ function selectedLocationCount() {
 function updateSelectionUi() {
   selectionCountEl.textContent = formatCount(selectedLocationCount(), "selected", "selected");
   searchProductsBtn.disabled = selectedLocationCount() === 0 || fetchedLocations.length === 0;
+}
+
+function deriveUnitPrice(product) {
+  return (
+    product.promoPrice ??
+    product.regularPrice ??
+    product.nationalPromoPrice ??
+    product.nationalRegularPrice ??
+    null
+  );
 }
 
 function renderLocationCards(data) {
@@ -199,19 +229,162 @@ function renderProductGroups(groups) {
       price.className = "meta";
       const regular = product.regularPrice ?? "N/A";
       const promo = product.promoPrice ?? "N/A";
-      price.textContent = `Regular: ${regular} | Promo: ${promo}`;
+      const nationalRegular = product.nationalRegularPrice ?? "N/A";
+      const nationalPromo = product.nationalPromoPrice ?? "N/A";
+      price.textContent = `Store: ${regular}/${promo} | National: ${nationalRegular}/${nationalPromo}`;
+
+      const unitPrice = deriveUnitPrice(product);
+      const unitPriceLine = document.createElement("p");
+      unitPriceLine.className = "meta";
+      unitPriceLine.textContent = `Effective unit price: ${formatMoney(unitPrice)}`;
 
       const temp = document.createElement("p");
       temp.className = "meta";
       temp.textContent = product.temperature ? `Temp: ${product.temperature}` : "Temp: N/A";
 
-      card.append(productName, brand, upc, size, price, temp);
+      const actionRow = document.createElement("div");
+      actionRow.className = "action-row";
+
+      const quantityLabel = document.createElement("label");
+      quantityLabel.textContent = "Qty";
+
+      const quantityInput = document.createElement("input");
+      quantityInput.type = "number";
+      quantityInput.min = "1";
+      quantityInput.value = "1";
+      quantityLabel.appendChild(quantityInput);
+
+      const addBtn = document.createElement("button");
+      addBtn.type = "button";
+      addBtn.className = "mini-btn";
+      addBtn.textContent = "Add to App Cart";
+      addBtn.disabled = !product.upc || unitPrice == null;
+      addBtn.addEventListener("click", () => {
+        addProductToCart(group.locationId, group.locationName, product, quantityInput.value);
+      });
+
+      actionRow.append(quantityLabel, addBtn);
+      card.append(productName, brand, upc, size, price, unitPriceLine, temp, actionRow);
       grid.appendChild(card);
     }
 
     section.appendChild(grid);
     productGroupsEl.appendChild(section);
   }
+}
+
+function addProductToCart(locationId, locationName, product, quantityRaw) {
+  const quantity = Number.parseInt(quantityRaw, 10);
+  if (!Number.isInteger(quantity) || quantity <= 0) {
+    setStatus(productStatusEl, "Quantity must be a positive integer.", true);
+    return;
+  }
+  if (!product.upc) {
+    setStatus(productStatusEl, "Product UPC is required to add to cart.", true);
+    return;
+  }
+
+  const unitPrice = deriveUnitPrice(product);
+  if (unitPrice == null) {
+    setStatus(productStatusEl, "Product price unavailable; cannot add to cart.", true);
+    return;
+  }
+
+  const key = `${locationId}:${product.upc}`;
+  const existing = appCartItems.find((item) => item.key === key);
+  if (existing) {
+    existing.quantity += quantity;
+  } else {
+    appCartItems.push({
+      key,
+      locationId,
+      locationName: locationName || locationId,
+      productId: product.productId || "",
+      upc: product.upc,
+      description: product.description || "Unnamed Product",
+      quantity,
+      unitPrice
+    });
+  }
+
+  setStatus(productStatusEl, "Added item to app cart.");
+  renderAppCart();
+}
+
+function removeCartItem(key) {
+  appCartItems = appCartItems.filter((item) => item.key !== key);
+  renderAppCart();
+}
+
+function clearCart() {
+  appCartItems = [];
+  renderAppCart();
+  setStatus(cartSyncStatusEl, "");
+}
+
+function buildStoreTotals() {
+  const grouped = new Map();
+  for (const item of appCartItems) {
+    const current = grouped.get(item.locationId) || {
+      locationId: item.locationId,
+      locationName: item.locationName,
+      total: 0,
+      items: []
+    };
+    current.total += item.unitPrice * item.quantity;
+    current.items.push(item);
+    grouped.set(item.locationId, current);
+  }
+  return Array.from(grouped.values()).sort((a, b) => a.total - b.total);
+}
+
+function renderAppCart() {
+  appCartListEl.innerHTML = "";
+  storeTotalsEl.innerHTML = "";
+  cartItemCountEl.textContent = formatCount(appCartItems.length, "item", "items");
+
+  if (appCartItems.length === 0) {
+    appCartListEl.innerHTML = '<p class="empty">No items in app cart yet.</p>';
+    cheapestStoreStatusEl.textContent = "";
+    syncCheapestCartBtn.disabled = true;
+    return;
+  }
+
+  for (const item of appCartItems) {
+    const row = document.createElement("div");
+    row.className = "cart-item";
+    row.innerHTML = `
+      <div>
+        <p class="item-title">${item.description}</p>
+        <p class="meta">Store: ${item.locationName} (${item.locationId})</p>
+        <p class="meta">UPC: ${item.upc}</p>
+      </div>
+      <p class="meta">Qty: ${item.quantity}</p>
+      <p class="meta">Unit: ${formatMoney(item.unitPrice)}</p>
+      <button type="button" class="secondary-btn mini-btn">Remove</button>
+    `;
+    row.querySelector("button").addEventListener("click", () => removeCartItem(item.key));
+    appCartListEl.appendChild(row);
+  }
+
+  const totals = buildStoreTotals();
+  const cheapest = totals[0];
+  for (const summary of totals) {
+    const div = document.createElement("div");
+    div.className = "store-total" + (cheapest && summary.locationId === cheapest.locationId ? " cheapest" : "");
+    div.innerHTML = `
+      <span>${summary.locationName} (${summary.locationId})</span>
+      <strong>${formatMoney(summary.total)}</strong>
+    `;
+    storeTotalsEl.appendChild(div);
+  }
+
+  if (cheapest) {
+    cheapestStoreStatusEl.textContent = `Cheapest store currently: ${cheapest.locationName} (${cheapest.locationId}) at ${formatMoney(cheapest.total)}.`;
+  } else {
+    cheapestStoreStatusEl.textContent = "";
+  }
+  syncCheapestCartBtn.disabled = !cheapest;
 }
 
 async function fetchLocations(event) {
@@ -358,9 +531,153 @@ function clearSelectedLocations() {
   renderLocationCards(fetchedLocations);
 }
 
+async function connectKrogerAccount() {
+  if (connectKrogerBtn) {
+    connectKrogerBtn.disabled = true;
+  }
+  setStatus(authStatusEl, "Requesting authorize URL...");
+
+  try {
+    const response = await fetch("/api/v1/kroger/oauth/authorize-url");
+    const payload = await response.json();
+
+    if (!response.ok) {
+      setStatus(authStatusEl, payload.error || "Failed to generate authorize URL.", true);
+      return;
+    }
+
+    setStatus(authStatusEl, "Redirecting to Kroger authorization...");
+    sessionStorage.setItem("krogerAutoAuthAttempted", "true");
+    window.location.assign(payload.authorizeUrl);
+  } catch (error) {
+    setStatus(authStatusEl, `Failed to connect account: ${String(error)}`, true);
+  } finally {
+    if (connectKrogerBtn) {
+      connectKrogerBtn.disabled = false;
+    }
+  }
+}
+
+async function autoConnectKrogerOnAppLoad() {
+  const url = new URL(window.location.href);
+  const oauthStatus = url.searchParams.get("oauth");
+  const oauthMessage = url.searchParams.get("message");
+  if (oauthStatus === "connected") {
+    setStatus(authStatusEl, "Kroger account connected.");
+    sessionStorage.removeItem("krogerAutoAuthAttempted");
+  } else if (oauthStatus === "error") {
+    const decoded = oauthMessage ? decodeURIComponent(oauthMessage) : "OAuth failed.";
+    setStatus(authStatusEl, decoded, true);
+  }
+
+  if (oauthStatus) {
+    url.searchParams.delete("oauth");
+    url.searchParams.delete("message");
+    window.history.replaceState({}, "", url.pathname + (url.search ? url.search : ""));
+  }
+
+  let statusPayload;
+  try {
+    const statusResponse = await fetch("/api/v1/kroger/oauth/status");
+    if (!statusResponse.ok) {
+      setStatus(authStatusEl, "Could not determine OAuth status.", true);
+      return;
+    }
+    statusPayload = await statusResponse.json();
+  } catch (error) {
+    setStatus(authStatusEl, `OAuth status check failed: ${String(error)}`, true);
+    return;
+  }
+
+  if (statusPayload.connected) {
+    setStatus(authStatusEl, statusPayload.expiresAt ? `Connected (expires ${statusPayload.expiresAt})` : "Connected.");
+    sessionStorage.removeItem("krogerAutoAuthAttempted");
+    return;
+  }
+
+  const attempted = sessionStorage.getItem("krogerAutoAuthAttempted") === "true";
+  if (!attempted) {
+    setStatus(authStatusEl, "Not connected. Starting Kroger OAuth...");
+    await connectKrogerAccount();
+  } else {
+    setStatus(authStatusEl, "Not connected. OAuth attempt already ran in this tab; refresh to retry.", true);
+  }
+}
+
+function buildCheapestCartPayload() {
+  const totals = buildStoreTotals();
+  const cheapest = totals[0];
+  if (!cheapest) {
+    return null;
+  }
+
+  const byUpc = new Map();
+  for (const item of cheapest.items) {
+    const currentQty = byUpc.get(item.upc) || 0;
+    byUpc.set(item.upc, currentQty + item.quantity);
+  }
+
+  const modality = cartModalityEl.value || "PICKUP";
+  const items = Array.from(byUpc.entries()).map(([upc, quantity]) => ({ upc, quantity, modality }));
+
+  return {
+    cheapestStore: cheapest,
+    requestBody: { items }
+  };
+}
+
+async function syncCheapestCart() {
+  const payload = buildCheapestCartPayload();
+  if (!payload) {
+    setStatus(cartSyncStatusEl, "No cart items available to sync.", true);
+    return;
+  }
+
+  syncCheapestCartBtn.disabled = true;
+  setStatus(cartSyncStatusEl, `Syncing ${payload.requestBody.items.length} item(s) to Kroger cart...`);
+
+  try {
+    const response = await fetch("/api/v1/kroger/cart/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload.requestBody)
+    });
+
+    const text = await response.text();
+    let result;
+    try {
+      result = text ? JSON.parse(text) : {};
+    } catch {
+      result = { raw: text };
+    }
+
+    cartSyncRawJsonEl.textContent = JSON.stringify(result, null, 2);
+
+    if (!response.ok) {
+      const message = result && result.error ? result.error : `Sync failed with status ${response.status}`;
+      setStatus(cartSyncStatusEl, message, true);
+      return;
+    }
+
+    const store = payload.cheapestStore;
+    setStatus(cartSyncStatusEl, `Kroger cart sync complete for cheapest store ${store.locationName} (${store.locationId}).`);
+  } catch (error) {
+    setStatus(cartSyncStatusEl, `Cart sync failed: ${String(error)}`, true);
+  } finally {
+    syncCheapestCartBtn.disabled = false;
+  }
+}
+
 locationsForm.addEventListener("submit", fetchLocations);
 productsForm.addEventListener("submit", searchProducts);
 selectAllBtn.addEventListener("click", selectAllLocations);
 clearSelectionBtn.addEventListener("click", clearSelectedLocations);
+clearCartBtn.addEventListener("click", clearCart);
+if (connectKrogerBtn) {
+  connectKrogerBtn.addEventListener("click", connectKrogerAccount);
+}
+syncCheapestCartBtn.addEventListener("click", syncCheapestCart);
 
 updateSelectionUi();
+renderAppCart();
+autoConnectKrogerOnAppLoad();

@@ -22,6 +22,21 @@ public class KrogerProperties {
     private String productsPath;
 
     @NotBlank
+    private String authorizationPath;
+
+    @NotBlank
+    private String identityProfilePath;
+
+    @NotBlank
+    private String cartAddPath;
+
+    @NotBlank
+    private String redirectUri;
+
+    @NotBlank
+    private String userScope;
+
+    @NotBlank
     private String clientId;
 
     @NotBlank
@@ -60,6 +75,46 @@ public class KrogerProperties {
 
     public void setProductsPath(String productsPath) {
         this.productsPath = productsPath;
+    }
+
+    public String getAuthorizationPath() {
+        return authorizationPath;
+    }
+
+    public void setAuthorizationPath(String authorizationPath) {
+        this.authorizationPath = authorizationPath;
+    }
+
+    public String getIdentityProfilePath() {
+        return identityProfilePath;
+    }
+
+    public void setIdentityProfilePath(String identityProfilePath) {
+        this.identityProfilePath = identityProfilePath;
+    }
+
+    public String getCartAddPath() {
+        return cartAddPath;
+    }
+
+    public void setCartAddPath(String cartAddPath) {
+        this.cartAddPath = cartAddPath;
+    }
+
+    public String getRedirectUri() {
+        return redirectUri;
+    }
+
+    public void setRedirectUri(String redirectUri) {
+        this.redirectUri = redirectUri;
+    }
+
+    public String getUserScope() {
+        return userScope;
+    }
+
+    public void setUserScope(String userScope) {
+        this.userScope = userScope;
     }
 
     public String getClientId() {
