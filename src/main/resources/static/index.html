@@ -17,7 +17,7 @@
     <header class="hero">
       <p class="eyebrow">Weekly Meal Planner</p>
       <h1>Kroger Location + Product Explorer</h1>
-      <p class="subhead">Step 1: fetch/select locations. Step 2: search a product term across selected locations.</p>
+      <p class="subhead">Find stores, select products into your app cart, compare totals by store, then sync cheapest cart to Kroger.</p>
     </header>
 
     <section class="panel panel-form">
@@ -87,11 +87,47 @@
 
     <section class="panel panel-results">
       <div class="results-head">
-        <h2>Product Results</h2>
+        <h2>3. Product Results (Select Items for Cart)</h2>
         <span id="productResultCount" class="count-pill">0 products</span>
       </div>
 
       <div id="productGroups" class="groups"></div>
+    </section>
+
+    <section class="panel panel-results">
+      <div class="results-head">
+        <h2>4. App Cart + Cheapest Store</h2>
+        <span id="cartItemCount" class="count-pill">0 items</span>
+      </div>
+
+      <div class="action-row">
+        <label>
+          Cart Modality
+          <select id="cartModality">
+            <option value="PICKUP">PICKUP</option>
+            <option value="DELIVERY">DELIVERY</option>
+            <option value="SHIP">SHIP</option>
+          </select>
+        </label>
+        <button id="clearCartBtn" class="secondary-btn" type="button">Clear App Cart</button>
+      </div>
+
+      <div id="appCartList" class="cart-list"></div>
+      <div id="storeTotals" class="store-total-list"></div>
+      <p id="cheapestStoreStatus" class="status"></p>
+    </section>
+
+    <section class="panel panel-results">
+      <div class="results-head">
+        <h2>5. Kroger Account + Cart Sync</h2>
+      </div>
+
+      <div class="action-row action-buttons">
+        <button id="syncCheapestCartBtn" type="button">Sync Cheapest Cart to Kroger</button>
+      </div>
+
+      <p id="authStatus" class="status"></p>
+      <p id="cartSyncStatus" class="status"></p>
     </section>
 
     <section class="panel panel-json">
@@ -102,6 +138,16 @@
     <section class="panel panel-json">
       <h2>Raw JSON: Products</h2>
       <pre id="productsRawJson">[]</pre>
+    </section>
+
+    <section class="panel panel-json">
+      <h2>Raw JSON: Profile</h2>
+      <pre id="profileRawJson">[]</pre>
+    </section>
+
+    <section class="panel panel-json">
+      <h2>Raw JSON: Cart Sync</h2>
+      <pre id="cartSyncRawJson">[]</pre>
     </section>
   </main>
 
