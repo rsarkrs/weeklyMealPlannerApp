@@ -5,5 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record ProductPrice(
         Double regular,
-        Double promo
+        Double promo,
+        Double regularPerUnitEstimate,
+        Double promoPerUnitEstimate
 ) {}

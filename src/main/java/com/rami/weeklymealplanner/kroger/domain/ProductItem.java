@@ -8,5 +8,6 @@ public record ProductItem(
         String size,
         String soldBy,
         ProductPrice price,
+        ProductPrice nationalPrice,
         ItemInformation itemInformation
 ) {}

@@ -39,8 +39,14 @@ public class FindKrogerProductsService {
 
             ProductItem item = firstItem(product.items());
             ProductPrice price = item != null ? item.price() : null;
+            ProductPrice nationalPrice = item != null ? item.nationalPrice() : null;
             ItemInformation itemInfo = item != null ? item.itemInformation() : null;
-            Temperature temperature = itemInfo != null ? itemInfo.temperature() : null;
+
+            // Kroger commonly returns temperature under product.temperature.
+            Temperature temperature = product.temperature();
+            if (temperature == null) {
+                temperature = itemInfo != null ? itemInfo.temperature() : null;
+            }
 
             String productId = safe(product.productId());
             String description = safe(product.description());
@@ -49,6 +55,12 @@ public class FindKrogerProductsService {
             String size = item != null ? safe(item.size()) : "";
             Double regularPrice = price != null ? price.regular() : null;
             Double promoPrice = price != null ? price.promo() : null;
+            Double regularPerUnitEstimate = price != null ? price.regularPerUnitEstimate() : null;
+            Double promoPerUnitEstimate = price != null ? price.promoPerUnitEstimate() : null;
+            Double nationalRegularPrice = nationalPrice != null ? nationalPrice.regular() : null;
+            Double nationalPromoPrice = nationalPrice != null ? nationalPrice.promo() : null;
+            Double nationalRegularPerUnitEstimate = nationalPrice != null ? nationalPrice.regularPerUnitEstimate() : null;
+            Double nationalPromoPerUnitEstimate = nationalPrice != null ? nationalPrice.promoPerUnitEstimate() : null;
             String soldBy = item != null ? safe(item.soldBy()) : "";
             String tempIndicator = temperature != null ? safe(temperature.indicator()) : "";
 
@@ -60,6 +72,12 @@ public class FindKrogerProductsService {
                     size,
                     regularPrice,
                     promoPrice,
+                    regularPerUnitEstimate,
+                    promoPerUnitEstimate,
+                    nationalRegularPrice,
+                    nationalPromoPrice,
+                    nationalRegularPerUnitEstimate,
+                    nationalPromoPerUnitEstimate,
                     soldBy,
                     tempIndicator
             ));

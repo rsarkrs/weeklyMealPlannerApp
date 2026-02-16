@@ -56,12 +56,15 @@ class FindKrogerProductsServiceTest {
                 null,
                 "Kroger 2% Milk",
                 "Kroger",
+                null,
+                new Temperature("REFRIGERATED"),
                 List.of(
                         new ProductItem(
                                 "0001111041729",
                                 "1 gal",
                                 "UNIT",
-                                new ProductPrice(3.99, 2.99),
+                                new ProductPrice(3.99, 2.99, 3.99, 2.99),
+                                new ProductPrice(4.29, 3.79, 4.29, 3.79),
                                 new ItemInformation(new Temperature("REFRIGERATED"))
                         )
                 )
@@ -81,6 +84,12 @@ class FindKrogerProductsServiceTest {
         assertThat(item.size()).isEqualTo("1 gal");
         assertThat(item.regularPrice()).isEqualTo(3.99);
         assertThat(item.promoPrice()).isEqualTo(2.99);
+        assertThat(item.regularPerUnitEstimate()).isEqualTo(3.99);
+        assertThat(item.promoPerUnitEstimate()).isEqualTo(2.99);
+        assertThat(item.nationalRegularPrice()).isEqualTo(4.29);
+        assertThat(item.nationalPromoPrice()).isEqualTo(3.79);
+        assertThat(item.nationalRegularPerUnitEstimate()).isEqualTo(4.29);
+        assertThat(item.nationalPromoPerUnitEstimate()).isEqualTo(3.79);
         assertThat(item.soldBy()).isEqualTo("UNIT");
         assertThat(item.temperature()).isEqualTo("REFRIGERATED");
     }
@@ -92,12 +101,15 @@ class FindKrogerProductsServiceTest {
                 "fallback-upc",
                 "Whole Milk",
                 "Simple Truth",
+                null,
+                null,
                 List.of(
                         new ProductItem(
                                 null,
                                 "64 fl oz",
                                 null,
-                                new ProductPrice(4.49, null),
+                                new ProductPrice(4.49, null, 0.56, null),
+                                null,
                                 null
                         )
                 )
@@ -111,5 +123,7 @@ class FindKrogerProductsServiceTest {
         assertThat(out).hasSize(1);
         assertThat(out.getFirst().upc()).isEqualTo("fallback-upc");
         assertThat(out.getFirst().promoPrice()).isNull();
+        assertThat(out.getFirst().regularPerUnitEstimate()).isEqualTo(0.56);
+        assertThat(out.getFirst().nationalRegularPrice()).isNull();
     }
 }

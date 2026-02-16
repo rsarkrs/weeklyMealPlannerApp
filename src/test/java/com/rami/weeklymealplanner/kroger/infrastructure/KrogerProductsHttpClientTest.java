@@ -49,7 +49,27 @@ class KrogerProductsHttpClientTest {
                 .setBody("""
                         {
                           "data": [
-                            { "productId": "0001111041729", "description": "Kroger 2% Milk" }
+                            {
+                              "productId": "0001111041729",
+                              "description": "Kroger 2% Milk",
+                              "temperature": { "indicator": "Refrigerated" },
+                              "items": [
+                                {
+                                  "price": {
+                                    "regular": 1.99,
+                                    "promo": 1.59,
+                                    "regularPerUnitEstimate": 1.99,
+                                    "promoPerUnitEstimate": 1.59
+                                  },
+                                  "nationalPrice": {
+                                    "regular": 2.29,
+                                    "promo": 1.89,
+                                    "regularPerUnitEstimate": 2.29,
+                                    "promoPerUnitEstimate": 1.89
+                                  }
+                                }
+                              ]
+                            }
                           ]
                         }
                         """));
@@ -65,6 +85,9 @@ class KrogerProductsHttpClientTest {
         assertThat(response).isNotNull();
         assertThat(response.data()).hasSize(1);
         assertThat(response.data().getFirst().productId()).isEqualTo("0001111041729");
+        assertThat(response.data().getFirst().temperature().indicator()).isEqualTo("Refrigerated");
+        assertThat(response.data().getFirst().items().getFirst().price().regular()).isEqualTo(1.99);
+        assertThat(response.data().getFirst().items().getFirst().nationalPrice().regular()).isEqualTo(2.29);
 
         RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
         assertThat(request).isNotNull();
