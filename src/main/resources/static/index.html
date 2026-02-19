@@ -21,6 +21,106 @@
     </header>
 
     <section class="panel panel-form">
+      <h2>0. Weekly Meal Intake Form</h2>
+      <form id="mealIntakeForm" class="controls meal-intake-controls" novalidate>
+        <label>
+          ZIP Code For Meal Pricing (optional for AI generation)
+          <input id="mealPlanZip" name="mealPlanZip" type="text" maxlength="10" placeholder="85338" />
+        </label>
+
+        <label>
+          How many people are meals for?
+          <input id="peopleCount" name="peopleCount" type="number" min="1" max="12" value="1" required />
+        </label>
+
+        <label>
+          How many meals per day?
+          <input id="mealsPerDay" name="mealsPerDay" type="number" min="1" max="8" value="3" required />
+        </label>
+
+        <label>
+          Existing Profile
+          <select id="existingProfileSelect">
+            <option value="">No saved profiles</option>
+          </select>
+        </label>
+
+        <label>
+          Optimization Goal
+          <select id="optimizationGoal">
+            <option value="BALANCED">Balanced</option>
+            <option value="COST">Lowest Cost</option>
+            <option value="VARIETY">Most Variety</option>
+          </select>
+        </label>
+
+        <label>
+          Max Prep Minutes / Meal
+          <input id="maxPrepMinutes" name="maxPrepMinutes" type="number" min="1" max="180" value="20" required />
+        </label>
+
+        <label>
+          Max Cook Minutes / Meal
+          <input id="maxCookMinutes" name="maxCookMinutes" type="number" min="1" max="240" value="30" required />
+        </label>
+
+        <div class="action-row action-buttons compact-actions">
+          <button id="createProfileBtn" type="button">Create New Unique Profile</button>
+          <button id="loadIntakeProfileBtn" class="secondary-btn" type="button">Load Selected Profile</button>
+        </div>
+      </form>
+
+      <p id="activeProfileId" class="status">Profile: not created</p>
+      <div id="personRows" class="person-rows"></div>
+
+      <div class="preference-grid">
+        <label>
+          Proteins for the week
+          <textarea id="proteinsInput" rows="3" placeholder="chicken, salmon, eggs"></textarea>
+        </label>
+
+        <label>
+          Veggies for the week
+          <textarea id="veggiesInput" rows="3" placeholder="broccoli, spinach, bell peppers"></textarea>
+        </label>
+
+        <label>
+          Carbs for the week
+          <textarea id="carbsInput" rows="3" placeholder="rice, oats, potatoes"></textarea>
+        </label>
+
+        <label>
+          Allergies / Exclusions
+          <textarea id="allergiesInput" rows="3" placeholder="peanuts, shellfish"></textarea>
+        </label>
+      </div>
+
+      <div class="action-row action-buttons">
+        <button id="generateMealIntakeJsonBtn" type="submit" form="mealIntakeForm">Generate Weekly Plan</button>
+      </div>
+
+      <p id="mealIntakeStatus" class="status" aria-live="polite"></p>
+    </section>
+
+    <section class="panel panel-results">
+      <div class="results-head">
+        <h2>0a. Generated Weekly Plan</h2>
+        <span id="mealPlanResultCount" class="count-pill">0 people</span>
+      </div>
+      <p id="mealPlanCheapestStoreStatus" class="status"></p>
+      <div id="calorieTargetCards" class="cards"></div>
+      <div id="mealPlanCards" class="groups"></div>
+    </section>
+
+    <section class="panel panel-results">
+      <div class="results-head">
+        <h2>0b. Consolidated Shopping List</h2>
+        <span id="shoppingListCount" class="count-pill">0 ingredients</span>
+      </div>
+      <div id="shoppingListCards" class="cards"></div>
+    </section>
+
+    <section class="panel panel-form">
       <h2>1. Find Locations</h2>
       <form id="locationsForm" class="controls locations-controls" novalidate>
         <label>
@@ -131,6 +231,11 @@
     </section>
 
     <section class="panel panel-json">
+      <h2>Raw JSON: Meal Planner Request</h2>
+      <pre id="mealIntakeJson">{}</pre>
+    </section>
+
+    <section class="panel panel-json">
       <h2>Raw JSON: Locations</h2>
       <pre id="locationsRawJson">[]</pre>
     </section>
@@ -141,7 +246,7 @@
     </section>
 
     <section class="panel panel-json">
-      <h2>Raw JSON: Profile</h2>
+      <h2>Raw JSON: Meal Planner Response</h2>
       <pre id="profileRawJson">[]</pre>
     </section>
 

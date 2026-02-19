@@ -1,5 +1,31 @@
-﻿const locationsForm = document.getElementById("locationsForm");
+const locationsForm = document.getElementById("locationsForm");
 const productsForm = document.getElementById("productsForm");
+const mealIntakeForm = document.getElementById("mealIntakeForm");
+const mealPlanZipInput = document.getElementById("mealPlanZip");
+const peopleCountInput = document.getElementById("peopleCount");
+const mealsPerDayInput = document.getElementById("mealsPerDay");
+const existingProfileSelect = document.getElementById("existingProfileSelect");
+const createProfileBtn = document.getElementById("createProfileBtn");
+const loadIntakeProfileBtn = document.getElementById("loadIntakeProfileBtn");
+const activeProfileIdEl = document.getElementById("activeProfileId");
+const personRowsEl = document.getElementById("personRows");
+const proteinsInput = document.getElementById("proteinsInput");
+const veggiesInput = document.getElementById("veggiesInput");
+const carbsInput = document.getElementById("carbsInput");
+const allergiesInput = document.getElementById("allergiesInput");
+const optimizationGoalInput = document.getElementById("optimizationGoal");
+const maxPrepMinutesInput = document.getElementById("maxPrepMinutes");
+const maxCookMinutesInput = document.getElementById("maxCookMinutes");
+const generateMealIntakeJsonBtn = document.getElementById("generateMealIntakeJsonBtn");
+const mealIntakeStatusEl = document.getElementById("mealIntakeStatus");
+const mealIntakeJsonEl = document.getElementById("mealIntakeJson");
+const mealPlanResultCountEl = document.getElementById("mealPlanResultCount");
+const mealPlanCheapestStoreStatusEl = document.getElementById("mealPlanCheapestStoreStatus");
+const calorieTargetCardsEl = document.getElementById("calorieTargetCards");
+const mealPlanCardsEl = document.getElementById("mealPlanCards");
+const shoppingListCountEl = document.getElementById("shoppingListCount");
+const shoppingListCardsEl = document.getElementById("shoppingListCards");
+const profileRawJsonEl = document.getElementById("profileRawJson");
 
 const zipInput = document.getElementById("zip");
 const radiusInput = document.getElementById("radius");
@@ -42,6 +68,8 @@ const cartSyncRawJsonEl = document.getElementById("cartSyncRawJson");
 let fetchedLocations = [];
 let selectedLocationIds = new Set();
 let appCartItems = [];
+const PROFILE_STORAGE_KEY = "weeklyMealPlanner.mealIntakeProfiles";
+let activeProfileId = null;
 
 function setStatus(element, message, isError = false) {
   element.textContent = message;
@@ -57,6 +85,178 @@ function formatMoney(value) {
     return "N/A";
   }
   return `$${Number(value).toFixed(2)}`;
+}
+
+function formatNumber(value) {
+  if (value == null || Number.isNaN(Number(value))) {
+    return "N/A";
+  }
+  return Number(value).toFixed(2);
+}
+
+function clearGeneratedPlanUi() {
+  mealPlanResultCountEl.textContent = "0 people";
+  mealPlanCheapestStoreStatusEl.textContent = "";
+  calorieTargetCardsEl.innerHTML = "";
+  mealPlanCardsEl.innerHTML = "";
+  shoppingListCountEl.textContent = "0 ingredients";
+  shoppingListCardsEl.innerHTML = "";
+}
+
+function renderCalorieTargets(calorieTargets) {
+  calorieTargetCardsEl.innerHTML = "";
+
+  if (!Array.isArray(calorieTargets) || calorieTargets.length === 0) {
+    calorieTargetCardsEl.innerHTML = '<p class="empty">No calorie targets were generated.</p>';
+    return;
+  }
+
+  for (const target of calorieTargets) {
+    const card = document.createElement("article");
+    card.className = "card";
+
+    const title = document.createElement("h3");
+    title.textContent = `Person: ${target.personId || "Unknown"}`;
+    const sex = document.createElement("p");
+    sex.className = "meta";
+    sex.textContent = `Sex: ${target.sex || "N/A"}`;
+    const bmr = document.createElement("p");
+    bmr.className = "meta";
+    bmr.textContent = `BMR: ${formatNumber(target.bmr)} kcal`;
+    const tdee = document.createElement("p");
+    tdee.className = "meta";
+    tdee.textContent = `TDEE (sedentary): ${formatNumber(target.tdee)} kcal`;
+    const daily = document.createElement("p");
+    daily.className = "meta";
+    daily.textContent = `Daily target: ${formatNumber(target.dailyCalorieTarget)} kcal`;
+    const floor = document.createElement("p");
+    floor.className = "meta";
+    floor.textContent = `Calorie floor: ${formatNumber(target.appliedCalorieFloor)} kcal`;
+
+    card.append(title, sex, bmr, tdee, daily, floor);
+    calorieTargetCardsEl.appendChild(card);
+  }
+}
+
+function renderMealPlans(plans) {
+  mealPlanCardsEl.innerHTML = "";
+
+  if (!Array.isArray(plans) || plans.length === 0) {
+    mealPlanCardsEl.innerHTML = '<p class="empty">No meal plans were generated.</p>';
+    return;
+  }
+
+  for (const personPlan of plans) {
+    const section = document.createElement("section");
+    section.className = "group";
+
+    const head = document.createElement("div");
+    head.className = "group-head";
+    const title = document.createElement("h3");
+    title.textContent = `Plan for ${personPlan.personId || "Unknown Person"}`;
+    head.appendChild(title);
+    section.appendChild(head);
+
+    const dayGrid = document.createElement("div");
+    dayGrid.className = "meal-day-grid";
+
+    const days = Array.isArray(personPlan.days) ? personPlan.days : [];
+    for (const day of days) {
+      const dayCard = document.createElement("article");
+      dayCard.className = "card";
+
+      const dayTitle = document.createElement("h3");
+      dayTitle.textContent = `Day ${day.dayNumber ?? "?"}`;
+      dayCard.appendChild(dayTitle);
+
+      const meals = Array.isArray(day.meals) ? day.meals : [];
+      for (const meal of meals) {
+        const mealBlock = document.createElement("div");
+        mealBlock.className = "meal-block";
+
+        const mealName = document.createElement("h4");
+        mealName.textContent = `${meal.mealType || "Meal"}: ${meal.mealName || "Unnamed"}`;
+        const meta = document.createElement("p");
+        meta.className = "meta";
+        meta.textContent = `Protein: ${meal.primaryProtein || "N/A"} | Calories: ${meal.estimatedCalories ?? "N/A"} | Prep/Cook: ${meal.prepMinutes ?? "N/A"}/${meal.cookMinutes ?? "N/A"} min`;
+
+        const ingredientList = document.createElement("ul");
+        ingredientList.className = "ingredient-list";
+        const ingredients = Array.isArray(meal.ingredients) ? meal.ingredients : [];
+        for (const ingredient of ingredients) {
+          const li = document.createElement("li");
+          li.textContent = `${ingredient.ingredient}: ${formatNumber(ingredient.householdQuantity)} ${ingredient.householdUnit || ""} (~${formatNumber(ingredient.metricQuantity)} ${ingredient.metricUnit || ""})`;
+          ingredientList.appendChild(li);
+        }
+
+        const stepList = document.createElement("ol");
+        stepList.className = "step-list";
+        const steps = Array.isArray(meal.steps) ? meal.steps : [];
+        for (const step of steps) {
+          const li = document.createElement("li");
+          li.textContent = step;
+          stepList.appendChild(li);
+        }
+
+        mealBlock.append(mealName, meta, ingredientList, stepList);
+        dayCard.appendChild(mealBlock);
+      }
+
+      dayGrid.appendChild(dayCard);
+    }
+
+    section.appendChild(dayGrid);
+    mealPlanCardsEl.appendChild(section);
+  }
+}
+
+function renderShoppingListRaw(shoppingList) {
+  shoppingListCardsEl.innerHTML = "";
+
+  if (!Array.isArray(shoppingList) || shoppingList.length === 0) {
+    shoppingListCountEl.textContent = "0 ingredients";
+    shoppingListCardsEl.innerHTML = '<p class="empty">No consolidated shopping list generated.</p>';
+    return;
+  }
+
+  shoppingListCountEl.textContent = formatCount(shoppingList.length, "ingredient", "ingredients");
+
+  for (const item of shoppingList) {
+    const card = document.createElement("article");
+    card.className = "card";
+
+    const name = document.createElement("h3");
+    name.textContent = item.ingredient || "Unnamed ingredient";
+    const household = document.createElement("p");
+    household.className = "meta";
+    household.textContent = `Household: ${formatNumber(item.totalHouseholdQuantity)} ${item.householdUnit || ""}`;
+    const metric = document.createElement("p");
+    metric.className = "meta";
+    metric.textContent = `Metric: ${formatNumber(item.totalMetricQuantity)} ${item.metricUnit || ""}`;
+
+    card.append(name, household, metric);
+    shoppingListCardsEl.appendChild(card);
+  }
+}
+
+function renderGeneratedPlan(payload) {
+  const planPayload = payload && payload.generatedPlan ? payload.generatedPlan : payload;
+  const plans = Array.isArray(planPayload.plans) ? planPayload.plans : [];
+  const shoppingList = Array.isArray(planPayload.shoppingListRaw) ? planPayload.shoppingListRaw : [];
+  const priced = planPayload.shoppingListPriced || null;
+
+  mealPlanResultCountEl.textContent = formatCount(plans.length, "person", "people");
+  renderCalorieTargets(planPayload.calorieTargets);
+  renderMealPlans(plans);
+  renderShoppingListRaw(shoppingList);
+
+  if (priced && priced.cheapestStoreName) {
+    mealPlanCheapestStoreStatusEl.textContent = `Cheapest store estimate: ${priced.cheapestStoreName} (${priced.cheapestStoreLocationId}) at ${formatMoney(priced.cheapestStoreTotal)}.`;
+  } else if (priced) {
+    mealPlanCheapestStoreStatusEl.textContent = "Pricing completed but no cheapest store could be determined.";
+  } else {
+    mealPlanCheapestStoreStatusEl.textContent = "No pricing response available.";
+  }
 }
 
 function selectedLocationCount() {
@@ -387,6 +587,412 @@ function renderAppCart() {
   syncCheapestCartBtn.disabled = !cheapest;
 }
 
+function parseListInput(value) {
+  if (!value) {
+    return [];
+  }
+  return value
+    .split(/[\n,]/)
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+}
+
+function createUniqueProfileId() {
+  const stamp = Date.now().toString(36);
+  const suffix = Math.random().toString(36).slice(2, 6);
+  return `profile-${stamp}-${suffix}`;
+}
+
+function getStoredProfiles() {
+  try {
+    const raw = window.localStorage.getItem(PROFILE_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveStoredProfiles(profiles) {
+  window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profiles));
+}
+
+function renderProfileOptions() {
+  if (!existingProfileSelect) {
+    return;
+  }
+
+  const profiles = getStoredProfiles();
+  existingProfileSelect.innerHTML = "";
+
+  if (profiles.length === 0) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "No saved profiles";
+    existingProfileSelect.appendChild(option);
+    return;
+  }
+
+  const emptyOption = document.createElement("option");
+  emptyOption.value = "";
+  emptyOption.textContent = "Select profile";
+  existingProfileSelect.appendChild(emptyOption);
+
+  for (const profile of profiles) {
+    const option = document.createElement("option");
+    option.value = profile.profileId;
+    option.textContent = `${profile.profileId} (${profile.peopleCount} people)`;
+    existingProfileSelect.appendChild(option);
+  }
+}
+
+function buildPersonRow(index, person = {}) {
+  const row = document.createElement("div");
+  row.className = "person-row";
+  row.dataset.personId = person.personId || `person-${index + 1}`;
+
+  const title = document.createElement("p");
+  title.className = "person-row-title";
+  title.textContent = `Person ${index + 1}`;
+
+  const sexLabel = document.createElement("label");
+  sexLabel.textContent = "Sex";
+  const sexSelect = document.createElement("select");
+  sexSelect.className = "person-sex";
+  const maleOption = document.createElement("option");
+  maleOption.value = "male";
+  maleOption.textContent = "male";
+  const femaleOption = document.createElement("option");
+  femaleOption.value = "female";
+  femaleOption.textContent = "female";
+  sexSelect.append(maleOption, femaleOption);
+  sexSelect.value = String(person.sex || "").toLowerCase() === "female" ? "female" : "male";
+  sexLabel.appendChild(sexSelect);
+
+  const ageLabel = document.createElement("label");
+  ageLabel.textContent = "Age (years)";
+  const ageInput = document.createElement("input");
+  ageInput.type = "number";
+  ageInput.className = "person-age";
+  ageInput.min = "1";
+  ageInput.max = "120";
+  ageInput.step = "1";
+  ageInput.value = person.ageYears != null ? String(person.ageYears) : "30";
+  ageLabel.appendChild(ageInput);
+
+  const heightLabel = document.createElement("label");
+  heightLabel.textContent = "Height (in)";
+  const heightInput = document.createElement("input");
+  heightInput.type = "number";
+  heightInput.className = "person-height";
+  heightInput.min = "36";
+  heightInput.max = "96";
+  heightInput.step = "1";
+  heightInput.value = person.heightInches != null ? String(person.heightInches) : "";
+  heightLabel.appendChild(heightInput);
+
+  const weightLabel = document.createElement("label");
+  weightLabel.textContent = "Weight (lb)";
+  const weightInput = document.createElement("input");
+  weightInput.type = "number";
+  weightInput.className = "person-weight";
+  weightInput.min = "60";
+  weightInput.max = "800";
+  weightInput.step = "0.1";
+  weightInput.value = person.weightLbs != null ? String(person.weightLbs) : "";
+  weightLabel.appendChild(weightInput);
+
+  const lossLabel = document.createElement("label");
+  lossLabel.textContent = "Target loss (lb/week)";
+  const lossInput = document.createElement("input");
+  lossInput.type = "number";
+  lossInput.className = "person-loss";
+  lossInput.min = "0";
+  lossInput.max = "5";
+  lossInput.step = "0.1";
+  lossInput.value = person.targetLossLbsPerWeek != null ? String(person.targetLossLbsPerWeek) : "1";
+  lossLabel.appendChild(lossInput);
+
+  row.append(title, sexLabel, ageLabel, heightLabel, weightLabel, lossLabel);
+  return row;
+}
+
+function renderPersonRows(count, people = []) {
+  if (!personRowsEl) {
+    return;
+  }
+
+  personRowsEl.innerHTML = "";
+  for (let index = 0; index < count; index += 1) {
+    personRowsEl.appendChild(buildPersonRow(index, people[index] || {}));
+  }
+}
+
+function collectPeopleFromRows() {
+  const rows = personRowsEl ? Array.from(personRowsEl.querySelectorAll(".person-row")) : [];
+  const people = [];
+
+  for (let index = 0; index < rows.length; index += 1) {
+    const row = rows[index];
+    const personId = row.dataset.personId || `person-${index + 1}`;
+    const sex = row.querySelector(".person-sex").value;
+    const ageYears = Number.parseFloat(row.querySelector(".person-age").value);
+    const heightInches = Number.parseFloat(row.querySelector(".person-height").value);
+    const weightLbs = Number.parseFloat(row.querySelector(".person-weight").value);
+    const targetLossLbsPerWeek = Number.parseFloat(row.querySelector(".person-loss").value);
+
+    if (!Number.isFinite(ageYears) || ageYears <= 0) {
+      return { error: `Person ${index + 1}: age is required and must be > 0.` };
+    }
+    if (!Number.isFinite(heightInches) || heightInches <= 0) {
+      return { error: `Person ${index + 1}: height is required and must be > 0.` };
+    }
+    if (!Number.isFinite(weightLbs) || weightLbs <= 0) {
+      return { error: `Person ${index + 1}: weight is required and must be > 0.` };
+    }
+    if (!Number.isFinite(targetLossLbsPerWeek) || targetLossLbsPerWeek < 0) {
+      return { error: `Person ${index + 1}: target loss must be >= 0.` };
+    }
+
+    people.push({
+      personId,
+      sex: sex.toUpperCase(),
+      ageYears,
+      heightInches,
+      weightLbs,
+      targetLossLbsPerWeek
+    });
+  }
+
+  return { people };
+}
+
+function saveActiveProfile(payload) {
+  const profiles = getStoredProfiles();
+  const index = profiles.findIndex((profile) => profile.profileId === payload.profileId);
+  if (index >= 0) {
+    profiles[index] = payload;
+  } else {
+    profiles.push(payload);
+  }
+  saveStoredProfiles(profiles);
+  renderProfileOptions();
+}
+
+function createNewProfile() {
+  activeProfileId = createUniqueProfileId();
+  activeProfileIdEl.textContent = `Profile: ${activeProfileId}`;
+  setStatus(mealIntakeStatusEl, "Created a new unique profile.");
+}
+
+function loadSelectedProfile() {
+  const profileId = existingProfileSelect ? existingProfileSelect.value : "";
+  if (!profileId) {
+    setStatus(mealIntakeStatusEl, "Select a saved profile to load.", true);
+    return;
+  }
+
+  const profile = getStoredProfiles().find((item) => item.profileId === profileId);
+  if (!profile) {
+    setStatus(mealIntakeStatusEl, "Selected profile was not found.", true);
+    return;
+  }
+
+  activeProfileId = profile.profileId;
+  peopleCountInput.value = String(profile.peopleCount || 1);
+  mealsPerDayInput.value = String(profile.mealsPerDay || 3);
+  if (mealPlanZipInput) {
+    mealPlanZipInput.value = profile.zip || mealPlanZipInput.value;
+  }
+  if (profile.zip) {
+    zipInput.value = profile.zip;
+  }
+  optimizationGoalInput.value = profile.optimizationGoal || "BALANCED";
+  maxPrepMinutesInput.value = String(profile.maxPrepMinutesPerMeal || 20);
+  maxCookMinutesInput.value = String(profile.maxCookMinutesPerMeal || 30);
+  proteinsInput.value = (profile.preferences && profile.preferences.proteins || []).join(", ");
+  veggiesInput.value = (profile.preferences && profile.preferences.veggies || []).join(", ");
+  carbsInput.value = (profile.preferences && profile.preferences.carbs || []).join(", ");
+  allergiesInput.value = (profile.allergies && profile.allergies.excludedIngredients || []).join(", ");
+
+  renderPersonRows(profile.peopleCount || 1, profile.people || []);
+  activeProfileIdEl.textContent = `Profile: ${activeProfileId}`;
+  setStatus(mealIntakeStatusEl, `Loaded profile ${activeProfileId}.`);
+}
+
+function buildMealIntakePayload() {
+  const peopleCount = Number.parseInt(peopleCountInput.value, 10);
+  const mealsPerDay = Number.parseInt(mealsPerDayInput.value, 10);
+  const maxPrepMinutesPerMeal = Number.parseInt(maxPrepMinutesInput.value, 10);
+  const maxCookMinutesPerMeal = Number.parseInt(maxCookMinutesInput.value, 10);
+
+  if (!Number.isInteger(peopleCount) || peopleCount <= 0) {
+    return { error: "How many people must be a positive integer." };
+  }
+  if (!Number.isInteger(mealsPerDay) || mealsPerDay <= 0) {
+    return { error: "Meals per day must be a positive integer." };
+  }
+  if (!Number.isInteger(maxPrepMinutesPerMeal) || maxPrepMinutesPerMeal <= 0) {
+    return { error: "Max prep minutes must be a positive integer." };
+  }
+  if (!Number.isInteger(maxCookMinutesPerMeal) || maxCookMinutesPerMeal <= 0) {
+    return { error: "Max cook minutes must be a positive integer." };
+  }
+
+  const peopleResult = collectPeopleFromRows();
+  if (peopleResult.error) {
+    return { error: peopleResult.error };
+  }
+
+  const proteins = parseListInput(proteinsInput.value);
+  const veggies = parseListInput(veggiesInput.value);
+  const carbs = parseListInput(carbsInput.value);
+  const excludedIngredients = parseListInput(allergiesInput.value);
+
+  if (proteins.length === 0 || veggies.length === 0 || carbs.length === 0) {
+    return { error: "Please enter at least one protein, veggie, and carb." };
+  }
+
+  if (!activeProfileId) {
+    activeProfileId = createUniqueProfileId();
+    activeProfileIdEl.textContent = `Profile: ${activeProfileId}`;
+  }
+
+  const normalizedPeople = peopleResult.people.map((person, index) => ({
+    ...person,
+    personId: `${activeProfileId}-p${index + 1}`
+  }));
+
+  const payload = {
+    people: normalizedPeople,
+    preferences: {
+      proteins,
+      veggies,
+      carbs
+    },
+    allergies: {
+      excludedIngredients
+    },
+    optimizationGoal: optimizationGoalInput.value || "BALANCED",
+    days: 7,
+    mealsPerDay,
+    maxPrepMinutesPerMeal,
+    maxCookMinutesPerMeal
+  };
+
+  return { payload };
+}
+
+async function handleMealIntakeSubmit(event) {
+  event.preventDefault();
+
+  const result = buildMealIntakePayload();
+  if (result.error) {
+    setStatus(mealIntakeStatusEl, result.error, true);
+    return;
+  }
+
+  const payload = result.payload;
+  const peopleCount = payload.people.length;
+  mealIntakeJsonEl.textContent = JSON.stringify(payload, null, 2);
+  profileRawJsonEl.textContent = "{}";
+  clearGeneratedPlanUi();
+
+  const profileToSave = {
+    profileId: activeProfileId,
+    peopleCount,
+    mealsPerDay: payload.mealsPerDay,
+    people: payload.people,
+    preferences: payload.preferences,
+    allergies: payload.allergies,
+    optimizationGoal: payload.optimizationGoal,
+    maxPrepMinutesPerMeal: payload.maxPrepMinutesPerMeal,
+    maxCookMinutesPerMeal: payload.maxCookMinutesPerMeal
+  };
+
+  generateMealIntakeJsonBtn.disabled = true;
+  setStatus(mealIntakeStatusEl, "Generating weekly plan...");
+
+  try {
+    const response = await fetch("/api/v1/meal-planner/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const text = await response.text();
+    let generated;
+    try {
+      generated = text ? JSON.parse(text) : {};
+    } catch {
+      generated = { raw: text };
+    }
+
+    profileRawJsonEl.textContent = JSON.stringify(generated, null, 2);
+
+    if (!response.ok) {
+      const message = generated && (generated.error || generated.message)
+        ? (generated.error || generated.message)
+        : `Weekly plan generation failed with status ${response.status}`;
+      setStatus(mealIntakeStatusEl, message, true);
+      return;
+    }
+
+    saveActiveProfile(profileToSave);
+    renderGeneratedPlan(generated);
+    setStatus(mealIntakeStatusEl, "Weekly plan generated via OpenAI and profile saved.");
+  } catch (error) {
+    profileRawJsonEl.textContent = JSON.stringify({ error: String(error) }, null, 2);
+    setStatus(mealIntakeStatusEl, "Could not reach the meal planner/OpenAI API. Make sure Spring Boot is running on port 8080.", true);
+  } finally {
+    generateMealIntakeJsonBtn.disabled = false;
+  }
+}
+
+function initializeMealIntakeForm() {
+  if (!mealIntakeForm) {
+    return;
+  }
+
+  renderProfileOptions();
+  renderPersonRows(Number.parseInt(peopleCountInput.value, 10) || 1);
+  activeProfileIdEl.textContent = "Profile: not created";
+  mealIntakeJsonEl.textContent = "{}";
+  profileRawJsonEl.textContent = "{}";
+  clearGeneratedPlanUi();
+  if (mealPlanZipInput && !mealPlanZipInput.value.trim() && zipInput.value.trim()) {
+    mealPlanZipInput.value = zipInput.value.trim();
+  }
+
+  peopleCountInput.addEventListener("change", () => {
+    const count = Number.parseInt(peopleCountInput.value, 10);
+    if (!Number.isInteger(count) || count <= 0) {
+      return;
+    }
+    const existing = collectPeopleFromRows();
+    renderPersonRows(count, existing.people || []);
+  });
+
+  if (mealPlanZipInput) {
+    mealPlanZipInput.addEventListener("change", () => {
+      if (!zipInput.value.trim()) {
+        zipInput.value = mealPlanZipInput.value.trim();
+      }
+    });
+  }
+  zipInput.addEventListener("change", () => {
+    if (mealPlanZipInput && !mealPlanZipInput.value.trim()) {
+      mealPlanZipInput.value = zipInput.value.trim();
+    }
+  });
+
+  createProfileBtn.addEventListener("click", createNewProfile);
+  loadIntakeProfileBtn.addEventListener("click", loadSelectedProfile);
+  mealIntakeForm.addEventListener("submit", handleMealIntakeSubmit);
+}
+
 async function fetchLocations(event) {
   event.preventDefault();
 
@@ -397,6 +1003,10 @@ async function fetchLocations(event) {
   if (!zip) {
     setStatus(locationStatusEl, "Please enter a ZIP code.", true);
     return;
+  }
+
+  if (mealPlanZipInput && !mealPlanZipInput.value.trim()) {
+    mealPlanZipInput.value = zip;
   }
 
   fetchLocationsBtn.disabled = true;
@@ -678,6 +1288,7 @@ if (connectKrogerBtn) {
 }
 syncCheapestCartBtn.addEventListener("click", syncCheapestCart);
 
+initializeMealIntakeForm();
 updateSelectionUi();
 renderAppCart();
 autoConnectKrogerOnAppLoad();
